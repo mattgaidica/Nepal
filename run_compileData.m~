@@ -1,115 +1,97 @@
 dataDir = '/Users/mattgaidica/Dropbox/Grants/2016 Harvard Travellers Club/data/export raw';
-headerFiles = dir(fullfile(dataDir,'*_jc_a_Raw Data.vhdr'));
+subject = 'mg';
+headerFiles = dir(fullfile(dataDir,['*_',subject,'_*_Raw Data.vhdr']));
 
-rows = length(fbands) + 1;
-cols = length(headerFiles);
-fbands = [0.5 4;4 7;8 12;13 30;30 150];
+trialType = 'normal';
+eventIdx = 2;
+winSeconds = 1.5;
+channels = [13];
+fileIdxs = reshape([1:14],2,7)';
 
-h1 = figure;
-h2 = figure;
-iSubplot = 1;
-for iFile = 1:length(headerFiles)
-    % create trials
-    startMark = 'S  1';
-    ballMark = 'B  1';
-    endMark = 'E  1';
+fbands = [4 7;7.5 12.5;13 30];
+rows = length(fbands);
+cols = 7;
 
-    [fs,label,meta] = bva_readheader(fullfile(dataDir,headerFiles(iFile).name));
-    markers = bva_readmarker(fullfile(dataDir,meta.MarkerFile));
-
-    trialCount = 1;
-    trials = {};
-    openTrial = 0;
-    normalTrial = 0;
-    for ii=1:length(markers{1})
-        if strcmp(markers{1}{ii},startMark)
-           trials(trialCount).ts = [markers{2}(ii)];
-           trials(trialCount).type = 'imaginary'; % overwrite this if normal
-           openTrial = 1;
-        end
-        if openTrial
-            if strcmp(markers{1}{ii},ballMark)
-                trials(trialCount).ts = [trials(trialCount).ts markers{2}(ii)];
-                normalTrial = 1;
-            end
-            if strcmp(markers{1}{ii},endMark)
-                trials(trialCount).ts = [trials(trialCount).ts markers{2}(ii)];
-                if normalTrial
-                    trials(trialCount).type = 'normal';
-                end
-                trialSamples = trials(trialCount).ts(end) - trials(trialCount).ts(1);
-                if trialSamples > 1500 % 3s
-                    disp(['!! Warning, trial ',num2str(ii),' is too long ',num2str(trialSamples)]);
-                else
-                    trialCount = trialCount + 1;
-                end
-                openTrial = 0;
-                normalTrial = 0;
-            end
-        end
-    end
-
-    trialType = 'normal';
-    centerEvent = 2;
-    winSamples = 750;
-    eegCenter = [];
-    eegCount = 1;
-    channel = 16;
-
-    startToBall = [];
-    ballToEnd = [];
-
-    eeg = importdata(fullfile(dataDir,meta.DataFile));
-
-    for iBands = 1:length(fbands);
-        eegFilt = eegfilt(eeg(:,channel)',fs,fbands(iBands,1),fbands(iBands,2));
-        eegFilt = artifactThresh(eegFilt,1,1000);
-        eegEnv = abs(hilbert(eegFilt)); % envelope
-        eegEnvMean = mean(eegEnv);
-        eegEnvStd = std(eegEnv);
-        for iTrial = 1:length(trials)
-            if strcmp(trials(iTrial).type,trialType)
-                eegData = eegEnv(trials(iTrial).ts(centerEvent) - winSamples : trials(iTrial).ts(centerEvent) + winSamples - 1);
-                eegData = (eegData - eegEnvMean) / eegEnvStd;
-                if max(eegData) > 15
-                    disp(['Trial ',num2str(iTrial),' exceeds Z-threshold']);
-                else
-                    eegCenter(eegCount,:) = eegData;
-                    startToBall(eegCount) = trials(iTrial).ts(2) - trials(iTrial).ts(1);
-                    ballToEnd(eegCount) = trials(iTrial).ts(3) - trials(iTrial).ts(2);
-                    eegCount = eegCount + 1;
+h1 = figure('position',[0 0 1100 900]);
+endToStart = [];
+for iDay = 1:7
+    for iBand = 1:length(fbands);
+        % reset averaging
+        eegCenter = [];
+        eegCount = 1;
+        startToBall = [];
+        ballToEnd = [];
+        for iSession = 1:2 % a|b
+            iFile = fileIdxs(iDay,iSession);
+            [trials,meta,fs] = getNepalTrials(dataDir,headerFiles(iFile).name);
+            eeg = importdata(fullfile(dataDir,meta.DataFile));
+            winSamples = winSeconds * fs;
+            t = linspace(-winSeconds,winSeconds,winSamples*2);
+            for iChannel = 1:length(channels)
+                channel = channels(iChannel);
+                eegFilt = eegfilt(eeg(:,channel)',fs,fbands(iBand,1),fbands(iBand,2));
+                eegFilt = artifactThresh(eegFilt,1,1000);
+                eegEnv = abs(hilbert(eegFilt)); % envelope
+                eegEnvMean = mean(eegEnv);
+                eegEnvStd = std(eegEnv);
+                for iTrial = 1:length(trials)
+                    if strcmp(trials(iTrial).type,trialType) % need all trials for non-bifurcated endToStart
+                        if trials(iTrial).locs(eventIdx) - winSamples > 0 && length(eegEnv) > trials(iTrial).locs(eventIdx) + winSamples - 1
+                            sampleRange = trials(iTrial).locs(eventIdx) - winSamples : trials(iTrial).locs(eventIdx) + winSamples - 1;
+                            eegEventSegment = (eegEnv(sampleRange) - eegEnvMean) / eegEnvStd;
+                            if max(eegEventSegment) > 15
+                                disp(['Trial ',num2str(iTrial),' exceeds Z-threshold']);
+                            else
+                                eegCenter(eegCount,:) = eegEventSegment;
+                                startToBall(eegCount) = trials(iTrial).locs(2) - trials(iTrial).locs(1);
+                                ballToEnd(eegCount) = trials(iTrial).locs(3) - trials(iTrial).locs(2);
+                                eegCount = eegCount + 1;
+                            end
+                        end
+                    end
+                    if iTrial > 1
+                        endToStart(iDay,eegCount) = trials(iTrial).locs(1) - lastEnd;
+                    end
+                    lastEnd = trials(iTrial).locs(end);
                 end
             end
         end
-
-        t = linspace(-1.5,1.5,1500);
-
-        figure(h1);
-        subplot(rows,cols,transposeSubplotOrder(cols,rows,iSubplot));
-        plot(t,eegCenter')
-        xlim([-1.5 1.5])
-        ylim([-1 10]);
-        title([num2str(fbands(iBands,1)),'-',num2str(fbands(iBands,2)),' Hz']);
-
-        figure(h2);
-        subplot(rows,cols,transposeSubplotOrder(cols,rows,iSubplot));
-        plot(t,mean(eegCenter))
-        xlim([-1.5 1.5])
-        ylim([-1 6]);
-        title([num2str(fbands(iBands,1)),'-',num2str(fbands(iBands,2)),' Hz']);
         
-        disp(iSubplot)
-        iSubplot = iSubplot + 1;
+        iSubplot = (iBand-1)*7+iDay;
+        subplot(rows,cols,iSubplot);
+        hold on;
+        shadedErrorBar(t,mean(eegCenter),std(eegCenter),{'markerfacecolor',[1/iBand 1/iBand 1]});
+        plot([0 0],[-100 100],'--','color','k');
+        ylimits = [-2 6];
+        yMarkerPos = linspace(ylimits(1),ylimits(2),length(startToBall));
+        for ii=1:length(startToBall)
+            plot(-startToBall/fs,yMarkerPos,'.','markersize',2,'color','r');
+            plot(ballToEnd/fs,yMarkerPos,'.','markersize',2,'color','r');
+        end
+        xlim([-winSeconds winSeconds])
+        ylim(ylimits);
+        if iDay == 1
+            ylabel({'Z',[num2str(fbands(iBand,1)),'-',num2str(fbands(iBand,2)),' Hz']});
+        end
+        if iBand == 1
+            title({['Day ',num2str(iDay),' ',subject],['Ch',mat2str(channels),' on Ball']});
+        end
+        if iBand == length(fbands)
+            xlabel('time (s)');
+        end
     end
-    figure(h1);
-    subplot(rows,cols,transposeSubplotOrder(cols,rows,iSubplot));
-    errorbar([mean(startToBall),mean(ballToEnd)],[std(startToBall),std(ballToEnd)]);
-    title('Start-Ball, Ball-End');
-
-    figure(h2);
-    subplot(rows,cols,transposeSubplotOrder(rows,cols,iSubplot));
-    errorbar([mean(startToBall),mean(ballToEnd)],[std(startToBall),std(ballToEnd)]);
-    title('Start-Ball, Ball-End');
- disp(iSubplot)
-    iSubplot = iSubplot + 1;
 end
+
+endToStartMean = [];
+endToStartStd = [];
+for iDay = 1:7
+    endToStartMean(iDay) = mean(endToStart(iDay,endToStart(iDay,:) > 0));
+    endToStartStd(iDay) = std(endToStart(iDay,endToStart(iDay,:) > 0));
+end
+figure;
+errorbar(endToStartMean/fs,endToStartStd/fs);
+xlabel('day');
+xlim([0 8]);
+ylabel('s');
+ylim([3 10]);
+title('End to Start');
