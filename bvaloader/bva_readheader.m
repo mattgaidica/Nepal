@@ -123,9 +123,12 @@ end
 
 
 % info for loading data
-meta.eegFile = hdr.commoninfos.DataFile;
-meta.DataFormat = hdr.commoninfos.DataFormat;
-meta.DataType = hdr.binaryinfos.BinaryFormat;
-meta.DataOrientation = hdr.commoninfos.DataOrientation;
-meta.scaleFactor  = scale;
+% meta.eegFile = hdr.commoninfos.DataFile;
+% meta.DataFormat = hdr.commoninfos.DataFormat;
+% meta.DataType = hdr.binaryinfos.BinaryFormat;
+% meta.DataOrientation = hdr.commoninfos.DataOrientation;
+% meta.scaleFactor  = scale;
+
+% just return hdr
+meta = hdr.commoninfos;
 
