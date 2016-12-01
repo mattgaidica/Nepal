@@ -1,5 +1,5 @@
 for iSubject = 1:2
-    startElectrode = 9;
+    startElectrode = 13;
     if iSubject == 1
         A = importdata('/Users/mattgaidica/Dropbox/Grants/2016 Harvard Travellers Club/data/Beta Ball Rectify Baseline MG_Raw Data.dat',',');
         curColor = 'b';
