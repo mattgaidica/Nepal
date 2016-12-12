@@ -1,11 +1,12 @@
 dataDir = '/Users/mattgaidica/Dropbox/Grants/2016 Harvard Travellers Club/data/export raw';
-subject = 'mg';
+subject = 'jc';
 headerFiles = dir(fullfile(dataDir,['*_',subject,'_*_Raw Data.vhdr']));
 
+plotStartEnd = false;
 trialType = 'normal';
 eventIdx = 2;
 winSeconds = 1;
-channels = [13];
+channels = [9 10 13 15 5 6];
 fileIdxs = reshape([1:14],2,7)';
 
 fbands = [4 7;7.5 12.5;13 30;60 80];
@@ -65,10 +66,12 @@ for iDay = 1:7
         subplot(rows,cols,iSubplot);
         hold on;
         ylimits = [-2 6];
-        yMarkerPos = linspace(ylimits(1),ylimits(2),length(startToBall));
-        for ii=1:length(startToBall)
-            plot(-startToBall/fs,yMarkerPos,'.','markersize',2,'color','r');
-            plot(ballToEnd/fs,yMarkerPos,'.','markersize',2,'color','r');
+        if plotStartEnd
+            yMarkerPos = linspace(ylimits(1),ylimits(2),length(startToBall));
+            for ii=1:length(startToBall)
+                plot(-startToBall/fs,yMarkerPos,'.','markersize',2,'color','r');
+                plot(ballToEnd/fs,yMarkerPos,'.','markersize',2,'color','r');
+            end
         end
         shadedErrorBar(t,mean(eegCenter),std(eegCenter),{'color',allColors(iBand,:)},1);
         plot([0 0],[-100 100],'--','color','k');
