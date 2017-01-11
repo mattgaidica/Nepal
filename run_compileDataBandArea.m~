@@ -1,8 +1,5 @@
-% --- ENV VARIABLES START ---
-subject = 'jc';
-% --- ENV VARIABLES END ---
-
 dataDir = '/Users/mattgaidica/Dropbox/Grants/2016 Harvard Travellers Club/data/export raw';
+subject = 'jc';
 headerFiles = dir(fullfile(dataDir,['*_',subject,'_*_Raw Data.vhdr']));
 accelCh = 17;
 
@@ -13,7 +10,7 @@ winSeconds = 1;
 channels = 1:16;
 fileIdxs = reshape([1:14],2,7)';
 
-fbands = [0.5 3.5;4 8;7.5 12.5;13 30;30 100];
+fbands = [0.5 4;4 7;7.5 12.5;13 30;30 100];
 fbandsNames = {'delta','theta','alpha','beta','gamma'};
 rows = length(fbands)+1;
 days = 7;
@@ -25,23 +22,23 @@ accelData = [];
 allZData = {};
 for iBand = 1:length(fbands)
     for iDay = 1:days
-        for iChannel = 1:length(channels)
-             % reset averaging
-            eegCenterZ = [];
-            eegCount = 1;
-            startToBall = [];
-            ballToEnd = [];
-            channel = channels(iChannel);
-            for iSession = 1:2 % a|b
-                iFile = fileIdxs(iDay,iSession);
-                [trials,meta,fs] = getNepalTrials(dataDir,headerFiles(iFile).name);
-                eeg = importdata(fullfile(dataDir,meta.DataFile));
+        for iSession = 1:2 % a|b
+            iFile = fileIdxs(iDay,iSession);
+            [trials,meta,fs] = getNepalTrials(dataDir,headerFiles(iFile).name);
+            eeg = importdata(fullfile(dataDir,meta.DataFile));
+            winSamples = winSeconds * fs;
+            t = linspace(-winSeconds,winSeconds,winSamples*2);
+            eegAccel = eegfilt(eeg(:,accelCh)',fs,0.5,20);
+            for iChannel = 1:length(channels)
+                channel = channels(iChannel);
                 eegFilt = eegfilt(eeg(:,channel)',fs,fbands(iBand,1),fbands(iBand,2));
                 eegMean = mean(eegFilt);
                 eegStd = std(eegFilt);
-                eegAccel = eegfilt(eeg(:,accelCh)',fs,0.5,20);
-                winSamples = winSeconds * fs;
-                t = linspace(-winSeconds,winSeconds,winSamples*2);
+                % reset averaging
+                eegCenterZ = [];
+                eegCount = 1;
+                startToBall = [];
+                ballToEnd = [];
                 for iTrial = 1:length(trials)
                     if strcmp(trials(iTrial).type,trialType) % need all trials for non-bifurcated endToStart
                         if trials(iTrial).locs(eventIdx) - winSamples > 0 && length(eegFilt) > trials(iTrial).locs(eventIdx) + winSamples - 1
@@ -64,10 +61,9 @@ for iBand = 1:length(fbands)
                     end
                     lastEnd = trials(iTrial).locs(end);
                 end
-                disp(['Band: ',num2str(iBand),', Ch: ',num2str(iChannel),', Day: ',num2str(iDay),', Session: ',num2str(iSession)]);
-                allZData{iBand,iChannel,iDay} = eegCenterZ;
             end
         end
+        allZData{iDay,iBand} = eegCenterZ;
     end
 end
     
