@@ -55,7 +55,8 @@ for iBand = 1:length(fbandsNames)
                 title({'',['Day',num2str(iDay),' Ch',num2str(iChannel)]});
             end
             ylim([-7 7]);
-            zInt(iDay) = trapz(zMeanEnv);
+%             zInt(iDay) = trapz(zMeanEnv);
+            zInt(iDay) = max(zMean) + abs(min(zMean));
         end
         
         zInt_r2table(r2Count,1) = iBand;
