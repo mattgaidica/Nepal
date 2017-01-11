@@ -5,7 +5,7 @@ ascent = [1320 -230 -280 570 1210 -1820 -530];
 
 % --- ENV VARIABLES START ---
 subject = 'jc';
-allZData = allZDataJC;
+allZData = allZDataJC_event1;
 spo2 = spo2JC;
 % --- ENV VARIABLES END ---
 
@@ -45,6 +45,8 @@ for iBand = 1:length(fbandsNames)
             curZData = allZData{iBand,iChannel,iDay};
             zMean = mean(curZData);
             zErr = std(curZData);
+            % not sure about subtracting the min value, but keeps it
+            % zero-based
             zMeanEnv = mean(abs(curZData'),2) - min(mean(abs(curZData'),2));
             shadedErrorBar(t,zMean',zErr');
             hold on;
@@ -55,8 +57,8 @@ for iBand = 1:length(fbandsNames)
                 title({'',['Day',num2str(iDay),' Ch',num2str(iChannel)]});
             end
             ylim([-7 7]);
-%             zInt(iDay) = trapz(zMeanEnv);
-            zInt(iDay) = max(zMean) + abs(min(zMean));
+            zInt(iDay) = trapz(zMeanEnv);
+%             zInt(iDay) = max(zMean) + abs(min(zMean));
         end
         
         zInt_r2table(r2Count,1) = iBand;

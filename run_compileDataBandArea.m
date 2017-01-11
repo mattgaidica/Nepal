@@ -8,7 +8,7 @@ accelCh = 17;
 
 plotStartEnd = false;
 trialType = 'normal';
-eventIdx = 2;
+eventIdx = 1;
 winSeconds = 1;
 channels = 1:16;
 fileIdxs = reshape([1:14],2,7)';
@@ -52,15 +52,15 @@ for iBand = 1:length(fbands)
                                 disp(['Trial ',num2str(iTrial),' exceeds Z-threshold']);
                             else
                                 eegCenterZ(eegCount,:) = eegEventSegmentZ;
-                                startToBall(eegCount) = trials(iTrial).locs(2) - trials(iTrial).locs(1);
-                                ballToEnd(eegCount) = trials(iTrial).locs(3) - trials(iTrial).locs(2);
+% %                                 startToBall(eegCount) = trials(iTrial).locs(2) - trials(iTrial).locs(1);
+% %                                 ballToEnd(eegCount) = trials(iTrial).locs(3) - trials(iTrial).locs(2);
                                 accelData(eegCount,:) = eegAccel(sampleRange);
                                 eegCount = eegCount + 1;
                             end
                         end
                     end
                     if iTrial > 1
-                        endToStart(iDay,eegCount) = trials(iTrial).locs(1) - lastEnd;
+% %                         endToStart(iDay,eegCount) = trials(iTrial).locs(1) - lastEnd;
                     end
                     lastEnd = trials(iTrial).locs(end);
                 end
