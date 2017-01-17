@@ -1,12 +1,12 @@
-analysis = 'integral';
+analysis = 'phase';
 
 switch analysis 
     case 'integral'
-        r2tableMG = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701140905_r2table_mg_integral.csv');
-        r2tableJC = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701140908_r2table_jc_integral.csv');
+        r2tableMG = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701162139_r2table_mg_integral.csv');
+        r2tableJC = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701162142_r2table_jc_integral.csv');
     case 'phase'
-        r2tableMG = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701141027_r2table_mg_phase.csv');
-        r2tableJC = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701141024_r2table_jc_phase.csv');
+        r2tableMG = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701162147_r2table_mg_phase.csv');
+        r2tableJC = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701162150_r2table_jc_phase.csv');
     otherwise
         warning('invalid anaylsis');
 end

@@ -4,8 +4,8 @@ altitude = [2860 2630 2350 2920 4130 2310 1780];
 ascent = [1320 -230 -280 570 1210 -1820 -530];
 
 % --- ENV VARIABLES START ---
-analysis = 'phase';
-subject = 'mg';
+% % analysis = 'integral';
+% % subject = 'mg';
 
 if subject == 'mg'
     allZData = allZDataMG_event2;
@@ -14,7 +14,7 @@ if subject == 'mg'
     spo2 = spo2MG;
 else
     allZData = allZDataJC_event2;
-    allData = allDataMG_event2;
+    allData = allDataJC_event2;
     allAccelData = allAccelDataJC;
     spo2 = spo2JC;
 end
@@ -61,15 +61,15 @@ for iBand = 1:length(fbandsNames)
                         y = hilbert(curZData(ii,:));
                         sigamp(ii,:) = real(y);
                     end
-                    zMeanEnv = mean(abs(curZData'),2) - min(mean(abs(curZData'),2));
+% %                     zMeanEnv = mean(abs(curZData'),2) - min(mean(abs(curZData'),2));
                     shadedErrorBar(t,zMean',zErr');
                     sigampMean = mean(sigamp);
-                    sigampCorr = sigampMean - mean(sigampMean(1:100));
+                    sigampCorr = sigampMean - mean(sigampMean(1:100)); % corrected
                     shadedErrorBar(t,sigampCorr,std(sigamp));
                     hold on;
-                    plot(t,sigamp,'Linewidth',3,'color','r');
+                    plot(t,sigampCorr,'Linewidth',3,'color','r');
                     ylim([-7 7]);
-                    zAnalysis(iDay) = trapz(sigampCorr);
+                    zAnalysis(iDay) = trapz(abs(sigampCorr));
                 case 'peak2peak'
                     % !!! needs work
                     zAnalysis(iDay) = peak2peak(zMean);
@@ -77,7 +77,7 @@ for iBand = 1:length(fbandsNames)
                     sigphase = [];
                     for ii=1:size(curData,1)
                         y = hilbert(curData(ii,:));
-                        sigphase(ii,:) = atan2(imag(y),real(y)); % angle(y)
+                        sigphase(ii,:) = angle(y);
                     end
                     shadedErrorBar(t,mean(sigphase),std(sigphase));
                     absPhase = abs(mean(sigphase));
@@ -109,7 +109,6 @@ for iBand = 1:length(fbandsNames)
         rsq = round(gof.rsquare,3);
         rmse = round(gof.rmse,3);
         title({['Alt vs ',analysis],['r2: ',num2str(rsq)],['rmse: ',num2str(rmse)]},'FontSize',fontSize);
-        grid on;
         r2table(r2Count,3) = rsq;
         
 % %         subplot(rows,cols,iSubplot+2);
@@ -130,7 +129,7 @@ for iBand = 1:length(fbandsNames)
 % %         title({['SpO2 vs ',analysis],['r2: ',num2str(rsq)],['rmse: ',num2str(rmse)]},'FontSize',fontSize);
 % %         r2table(r2Count,5) = rsq;
         
-        if chCount == 4
+        if chCount == chPerFigure
             y = [];
             for iAcc = 1:days
                 ax(rows,iAcc) = subplot(rows,cols,specifySubplot([rows cols],[rows iAcc]));
@@ -143,7 +142,7 @@ for iBand = 1:length(fbandsNames)
                 end
                 title('Accel','FontSize',fontSize);
                 grid on;
-%                 linkaxes(ax(:,iAcc),'x');
+                linkaxes(ax(:,iAcc),'x');
             end
             
             subplot(rows,cols,specifySubplot([rows cols],[rows cols]));
@@ -153,9 +152,8 @@ for iBand = 1:length(fbandsNames)
             rsq = round(gof.rsquare,3);
             rmse = round(gof.rmse,3);
             title({['Alt vs AccP2P'],['r2: ',num2str(rsq)],['rmse: ',num2str(rmse)]},'FontSize',fontSize);
-            grid on;
         
-            figureName = [dt,'_','bandChannelScatters_',subject,'_band',num2str(iBand),'_ch',num2str(iChannel),'_',analysis];
+            figureName = [dt,'_','bandChannelScatters_',subject,'_band',num2str(iBand),'_ch',num2str(iChannel-chPerFigure+1),'_',analysis];
             savefig(h1,fullfile('figures',figureName),'compact');
 %             saveas(h1,fullfile('figures',[figureName,'.png']));
 %             print(h1,fullfile('figures',[figureName,'.png']),'-dpng');

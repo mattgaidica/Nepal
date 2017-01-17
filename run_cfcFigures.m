@@ -1,5 +1,5 @@
 analysis = 'deltaPhase';
-subject = 'jc';
+subject = 'mg';
 
 if subject == 'mg'
     allData = allDataMG_event2;
@@ -7,7 +7,9 @@ else
     allData = allDataJC_event2;
 end
 
+fs = 500;
 fbandsNames = {'delta','theta','alpha','beta','gamma'};
+fbands = [0.5 3.5;4 8;7.5 12.5;13 30;30 100];
 channels = 1:16;
 rows = 4;
 days = 7;
@@ -30,11 +32,14 @@ for iChannel = 1:length(channels)
             if size(xAmp,1) ~= size(xPha,1)
                 warning('trial size mismatch');
             end
+            pac = [];
             for iTrial = 1:size(xPha,1)
+                disp(['Trial: ',num2str(iTrial)]);
                 hxPha = hilbert(xPha(iTrial,:));
                 phaPha = [phaPha angle(hxPha)];
                 hxAmp = hilbert(xAmp(iTrial,:));
                 ampAmp = [ampAmp normalize(abs(hxAmp))];
+                pac(iTrial) = pac_plv(angle(hxPha),normalize(abs(hxAmp)),fbands(phaBand,:),fbands(ampBands(iBand),:),fs);
             end
             y = [];
             for ii=1:bins-1
@@ -45,14 +50,16 @@ for iChannel = 1:length(channels)
                     y(ii) = mean(ampAmp(idxs));
                 end
             end
+            
             bar(edges(1:bins-1),y,'k','EdgeColor','k');
             xlim([-pi pi]);
             ylim([0 0.7]);
+            prependStr = '';
             if iDay == 1 && iBand == 1
-                title({['Ch ',num2str(channels(iChannel))],['Day ',num2str(iDay)]});
-            else
-                title({'',['Day ',num2str(iDay)]});
+                prependStr = ['Ch ',num2str(channels(iChannel))];
             end
+            title({prependStr,['Day ',num2str(iDay)],['PAC: ',num2str(mean(pac))]});
+            
             if iDay == 1
                 ylabel({[fbandsNames{ampBands(iBand)},' (',num2str(ampBands(iBand)),')'],'Normal Amp'});
             end
@@ -62,7 +69,7 @@ for iChannel = 1:length(channels)
         end
     end
     figureName = [dt,'_','cfc_',subject,'_ch',num2str(iChannel),'_',analysis];
-%     savefig(h1,fullfile('figures',figureName));
-    saveas(h1,fullfile('figures',[figureName,'.png']));
+    savefig(h1,fullfile('figures',figureName),'compact');
+%     saveas(h1,fullfile('figures',[figureName,'.png']));
     close(h1);
 end
