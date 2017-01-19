@@ -2,8 +2,8 @@ analysis = 'phase';
 
 switch analysis 
     case 'integral'
-        r2tableMG = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701162139_r2table_mg_integral.csv');
-        r2tableJC = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701162142_r2table_jc_integral.csv');
+        r2tableMG = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701172213_r2table_mg_integral.csv');
+        r2tableJC = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701172216_r2table_jc_integral.csv');
     case 'phase'
         r2tableMG = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701162147_r2table_mg_phase.csv');
         r2tableJC = csvread('/Users/mattgaidica/Documents/MATLAB/Nepal/figures/201701162150_r2table_jc_phase.csv');
@@ -16,20 +16,19 @@ plotReport(r2tableMG,r2tableJC,analysis);
 function plotReport(r2tableMG,r2tableJC,analysis)
     figure('position',[0 0 500 1000]);
     fbandsNames = {'delta','theta','alpha','beta','gamma'};
-    rows = 5;
-    cols = 1;
+    cols = 2;
     
     r2col = 3;
-    r2rows = {3:8;9;13;11;14};
-    r2rowLabels = {'ch3-8','ch9 (ipsi S1)','ch13 (contraS1)','ch11 (ipsi M1)','ch14 (contra M1)'};
+    r2rows = {5;6;13;9;14;11;15;10;16;12;13:16;9:12};
+%     r2rowLabels = {'ch3-8','ch9 (IPSI smctx)','ch13 (CONTRA smctx)'};
     for ir2Rows = 1:size(r2rows,1)
-        subplot(rows,cols,ir2Rows);
+        subplot(size(r2rows,1)/cols,cols,ir2Rows);
         plotData = [];
         for iBand=1:length(fbandsNames)
             plotData(1,iBand) = mean(r2tableMG(r2rows{ir2Rows}+(16*(iBand-1)),r2col));
             plotData(2,iBand) = mean(r2tableJC(r2rows{ir2Rows}+(16*(iBand-1)),r2col));
         end
-        ax = formatAxes(plotData,fbandsNames,r2rowLabels{ir2Rows});
+        ax = formatAxes(plotData,fbandsNames,num2str(r2rows{ir2Rows}));
     end
     legend(ax,{'MG','JC'},'Location','southoutside');
     suptitle(analysis);

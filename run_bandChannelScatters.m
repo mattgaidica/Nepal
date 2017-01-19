@@ -4,13 +4,13 @@ altitude = [2860 2630 2350 2920 4130 2310 1780];
 ascent = [1320 -230 -280 570 1210 -1820 -530];
 
 % --- ENV VARIABLES START ---
-% % analysis = 'integral';
-% % subject = 'mg';
+analysis = 'phase';
+subject = 'mg';
 
 if subject == 'mg'
-    allZData = allZDataMG_event2;
-    allData = allDataMG_event2;
-    allAccelData = allAccelDataMG;
+    allZData = allZDataMG_event2_trial5;
+    allData = allDataMG_event2_trial5;
+    allAccelData = allAccelDataMG_event2_trial5;
     spo2 = spo2MG;
 else
     allZData = allZDataJC_event2;
@@ -44,7 +44,7 @@ for iBand = 1:length(fbandsNames)
         zAnalysis = [];
         for iDay = 1:days
             if chCount == 1 && iDay == 1
-                h1 = figure('position',[0 0 1100 900]);
+                h1 = figure('position',[0 0 1100 900],'Visible','Off');
             end
             ax(chCount,iDay) = subplot(rows,cols,specifySubplot([rows cols],[chCount,iDay]));
             curData = allData{iBand,iChannel,iDay};
@@ -59,11 +59,12 @@ for iBand = 1:length(fbandsNames)
                     sigamp = [];
                     for ii=1:size(curZData,1)
                         y = hilbert(curZData(ii,:));
-                        sigamp(ii,:) = real(y);
+                        sigamp(ii,:) = abs(y);
                     end
 % %                     zMeanEnv = mean(abs(curZData'),2) - min(mean(abs(curZData'),2));
                     shadedErrorBar(t,zMean',zErr');
                     sigampMean = mean(sigamp);
+                    % maybe this should be built into compileData.m
                     sigampCorr = sigampMean - mean(sigampMean(1:100)); % corrected
                     shadedErrorBar(t,sigampCorr,std(sigamp));
                     hold on;
@@ -154,6 +155,7 @@ for iBand = 1:length(fbandsNames)
             title({['Alt vs AccP2P'],['r2: ',num2str(rsq)],['rmse: ',num2str(rmse)]},'FontSize',fontSize);
         
             figureName = [dt,'_','bandChannelScatters_',subject,'_band',num2str(iBand),'_ch',num2str(iChannel-chPerFigure+1),'_',analysis];
+            disp(['Writing ',figureName]);
             savefig(h1,fullfile('figures',figureName),'compact');
 %             saveas(h1,fullfile('figures',[figureName,'.png']));
 %             print(h1,fullfile('figures',[figureName,'.png']),'-dpng');

@@ -1,15 +1,6 @@
-% analysis = 'integral';
-% subject = 'mg';
-% run_bandChannelScatters
-% 
-% analysis = 'integral';
-% subject = 'jc';
-% run_bandChannelScatters
-
-analysis = 'phase';
-subject = 'mg';
-run_bandChannelScatters
-
-analysis = 'phase';
-subject = 'jc';
-run_bandChannelScatters
+figure;
+for iSig = 5:size(curData,1)
+    polarplot(sigphase(iSig,:),sigamp(iSig,:));
+    hold on;
+end
+polarplot(median(sigphase),mean(sigamp),'LineWidth',3);
