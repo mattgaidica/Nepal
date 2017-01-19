@@ -5,16 +5,18 @@ subject = 'mg';
 dataDir = '/Users/mattgaidica/Dropbox/Grants/2016 Harvard Travellers Club/data/export raw';
 headerFiles = dir(fullfile(dataDir,['*_',subject,'_*_Raw Data.vhdr']));
 accelCh = 17;
-startTrial = 5;
+startTrial = 1;
 
 plotStartEnd = false;
 trialType = 'normal';
 eventIdx = 2;
 winSeconds = 1;
-channels = 1:16;
+% channels = 1:16;
+channels = 1;
 fileIdxs = reshape([1:14],2,7)';
 
-fbands = [0.5 3.5;4 8;7.5 12.5;13 30;30 100];
+% fbands = [0.5 3.5;4 8;7.5 12.5;13 30;30 100];
+fbands = [0.5 3.5];
 fbandsNames = {'delta','theta','alpha','beta','gamma'};
 rows = size(fbands,1)+1;
 days = 7;
@@ -25,6 +27,8 @@ endToStart = [];
 allAccelData = {};
 allZData = {};
 allData = {};
+trialData = {};
+allTrials = {};
 for iBand = 1:size(fbands,1)
     for iDay = 1:days
         for iChannel = 1:length(channels)
@@ -57,21 +61,17 @@ for iBand = 1:size(fbands,1)
                             % remove the trial for all bands
                             eegCenter(eegCount,:) = eegEventSegment;
                             eegCenterZ(eegCount,:) = eegEventSegmentZ;
-%                             startToBall(eegCount) = trials(iTrial).locs(2) - trials(iTrial).locs(1);
-%                             ballToEnd(eegCount) = trials(iTrial).locs(3) - trials(iTrial).locs(2);
                             accelData(eegCount,:) = eegAccel(sampleRange);
+                            trialData{eegCount} = trials(iTrial);
                             eegCount = eegCount + 1;
                         end
                     end
-                    if iTrial > 1
-%                         endToStart(iDay,eegCount) = trials(iTrial).locs(1) - lastEnd;
-                    end
-%                     lastEnd = trials(iTrial).locs(end);
                 end
                 disp(['Band: ',num2str(iBand),', Ch: ',num2str(iChannel),', Day: ',num2str(iDay),', Session: ',num2str(iSession)]);
                 allData{iBand,iChannel,iDay} = eegCenter;
                 allZData{iBand,iChannel,iDay} = eegCenterZ;
                 allAccelData{iDay} = accelData; % overwrites itself, but that's okay
+                allTrials{iDay} = trialData;
             end
         end
     end
