@@ -4,13 +4,14 @@ altitude = [2860 2630 2350 2920 4130 2310 1780];
 ascent = [1320 -230 -280 570 1210 -1820 -530];
 
 % --- ENV VARIABLES START ---
-analysis = 'phase';
-subject = 'mg';
+analysis = 'amplitude';
+subject = 'jc';
+% --- ENV VARIABLES END ---
 
 if subject == 'mg'
-    allZData = allZDataMG_event2_trial5;
-    allData = allDataMG_event2_trial5;
-    allAccelData = allAccelDataMG_event2_trial5;
+    allZData = allZDataMG_event2;
+    allData = allDataMG_event2;
+    allAccelData = allAccelDataMG;
     spo2 = spo2MG;
 else
     allZData = allZDataJC_event2;
@@ -18,7 +19,6 @@ else
     allAccelData = allAccelDataJC;
     spo2 = spo2JC;
 end
-% --- ENV VARIABLES END ---
 
 fontSize = 6;
 winSeconds = 1;
@@ -26,7 +26,8 @@ fs = 500;
 winSamples = winSeconds * fs;
 t = linspace(-winSeconds,winSeconds,winSamples*2);
 
-fbandsNames = {'delta','theta','alpha','beta','gamma'};
+% fbandsNames = {'delta','theta','alpha','beta','gamma'};
+fbandsNames = {'delta'};
 days = 7;
 cols = days+1;
 rows = 5;
@@ -41,10 +42,10 @@ dt = datestr(now,'yyyymmddHHMM');
 for iBand = 1:length(fbandsNames)
     ax = [];
     for iChannel = 1:length(channels)
-        zAnalysis = [];
+        fitData = [];
         for iDay = 1:days
             if chCount == 1 && iDay == 1
-                h1 = figure('position',[0 0 1100 900],'Visible','Off');
+                h1 = figure('position',[0 0 1100 900]);
             end
             ax(chCount,iDay) = subplot(rows,cols,specifySubplot([rows cols],[chCount,iDay]));
             curData = allData{iBand,iChannel,iDay};
@@ -53,7 +54,7 @@ for iBand = 1:length(fbandsNames)
             zErr = std(curZData);
             
             switch analysis
-                case 'integral'
+                case 'amplitude'
                     % not sure about subtracting the min value, but keeps it
                     % zero-based
                     sigamp = [];
@@ -70,10 +71,10 @@ for iBand = 1:length(fbandsNames)
                     hold on;
                     plot(t,sigampCorr,'Linewidth',3,'color','r');
                     ylim([-7 7]);
-                    zAnalysis(iDay) = trapz(abs(sigampCorr));
+                    fitData(iDay) = mean(abs(sigampCorr));
                 case 'peak2peak'
                     % !!! needs work
-                    zAnalysis(iDay) = peak2peak(zMean);
+                    fitData(iDay) = peak2peak(zMean);
                 case 'phase'
                     sigphase = [];
                     for ii=1:size(curData,1)
@@ -81,16 +82,19 @@ for iBand = 1:length(fbandsNames)
                         sigphase(ii,:) = angle(y);
                     end
                     shadedErrorBar(t,mean(sigphase),std(sigphase));
-                    absPhase = abs(mean(sigphase));
-                    hold on; plot(t,absPhase,'color','r');
+% %                     absPhase = abs(mean(sigphase));
+% %                     hold on; plot(t,absPhase,'color','r');
+% %                     zAnalysis(iDay) = trapz(absPhase);
+                    plvVector = plv(sigphase);
+                    hold on; plot(t,plvVector,'color','r');
+                    fitData(iDay) = mean(plvVector);
                     ylim([-pi pi]);
-                    zAnalysis(iDay) = trapz(absPhase);
                 otherwise
                     warning('invalid analysis');
             end
             
             if chCount == 1 && iDay == 1
-                title({[num2str(iBand),': ',fbandsNames{iBand}],['Day',num2str(iDay),', Ch',num2str(iChannel)]},'FontSize',fontSize);
+                title({[subject,' ',num2str(iBand),': ',fbandsNames{iBand}],['Day',num2str(iDay),', Ch',num2str(iChannel)]},'FontSize',fontSize);
             else
                 title({'',['Day',num2str(iDay),', Ch',num2str(iChannel)]},'FontSize',fontSize);
             end
@@ -104,13 +108,17 @@ for iBand = 1:length(fbandsNames)
         r2table(r2Count,2) = iChannel;
         
         subplot(rows,cols,specifySubplot([rows cols],[chCount,iDay])+1);
-        scatter(zAnalysis,altitude,25,'k','*');
+        scatter(fitData,altitude,25,'k','*');
         lsline;
-        [f,gof] = fit(zAnalysis',altitude','poly1');
+        [f,gof] = fit(fitData',altitude','poly1');
         rsq = round(gof.rsquare,3);
         rmse = round(gof.rmse,3);
-        title({['Alt vs ',analysis],['r2: ',num2str(rsq)],['rmse: ',num2str(rmse)]},'FontSize',fontSize);
+        lm = fitlm(fitData',altitude','linear');
+        pVal = lm.Coefficients{2,4};
+        title({['Alt vs ',analysis],['r2: ',num2str(rsq),' p: ',num2str(pVal)],['rmse: ',num2str(rmse)]},'FontSize',fontSize);
         r2table(r2Count,3) = rsq;
+        r2table(r2Count,4) = pVal;
+        r2table(r2Count,5:5+days-1) = fitData;
         
 % %         subplot(rows,cols,iSubplot+2);
 % %         scatter(zAnalysis,ascent,25,'k','*');
