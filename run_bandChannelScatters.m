@@ -4,8 +4,8 @@ altitude = [2860 2630 2350 2920 4130 2310 1780];
 ascent = [1320 -230 -280 570 1210 -1820 -530];
 
 % --- ENV VARIABLES START ---
-analysis = 'amplitude';
-subject = 'jc';
+analysis = 'phase';
+subject = 'mg';
 % --- ENV VARIABLES END ---
 
 if subject == 'mg'
@@ -26,6 +26,8 @@ fs = 500;
 winSamples = winSeconds * fs;
 t = linspace(-winSeconds,winSeconds,winSamples*2);
 
+% channels = 1:16;
+channels = [5:8];
 % fbandsNames = {'delta','theta','alpha','beta','gamma'};
 fbandsNames = {'delta'};
 days = 7;
@@ -33,7 +35,6 @@ cols = days+1;
 rows = 5;
 chPerFigure = 4;
 chCount = 1;
-channels = 1:16;
 
 r2table = [];
 r2Count = 1;
@@ -48,8 +49,8 @@ for iBand = 1:length(fbandsNames)
                 h1 = figure('position',[0 0 1100 900]);
             end
             ax(chCount,iDay) = subplot(rows,cols,specifySubplot([rows cols],[chCount,iDay]));
-            curData = allData{iBand,iChannel,iDay};
-            curZData = allZData{iBand,iChannel,iDay};
+            curData = allData{iBand,channels(iChannel),iDay};
+            curZData = allZData{iBand,channels(iChannel),iDay};
             zMean = mean(curZData);
             zErr = std(curZData);
             
@@ -85,18 +86,18 @@ for iBand = 1:length(fbandsNames)
 % %                     absPhase = abs(mean(sigphase));
 % %                     hold on; plot(t,absPhase,'color','r');
 % %                     zAnalysis(iDay) = trapz(absPhase);
-                    plvVector = plv(sigphase);
+                    plvVector = plvMg(sigphase);
                     hold on; plot(t,plvVector,'color','r');
-                    fitData(iDay) = mean(plvVector);
+                    fitData(iDay) = mean(plvVector(50:end-50));
                     ylim([-pi pi]);
                 otherwise
                     warning('invalid analysis');
             end
             
             if chCount == 1 && iDay == 1
-                title({[subject,' ',num2str(iBand),': ',fbandsNames{iBand}],['Day',num2str(iDay),', Ch',num2str(iChannel)]},'FontSize',fontSize);
+                title({[subject,' ',num2str(iBand),': ',fbandsNames{iBand}],['Day',num2str(iDay),', Ch',num2str(channels(iChannel))]},'FontSize',fontSize);
             else
-                title({'',['Day',num2str(iDay),', Ch',num2str(iChannel)]},'FontSize',fontSize);
+                title({'',['Day',num2str(iDay),', Ch',num2str(channels(iChannel))]},'FontSize',fontSize);
             end
             grid on;
             if iDay == 1
@@ -162,7 +163,7 @@ for iBand = 1:length(fbandsNames)
             rmse = round(gof.rmse,3);
             title({['Alt vs AccP2P'],['r2: ',num2str(rsq)],['rmse: ',num2str(rmse)]},'FontSize',fontSize);
         
-            figureName = [dt,'_','bandChannelScatters_',subject,'_band',num2str(iBand),'_ch',num2str(iChannel-chPerFigure+1),'_',analysis];
+            figureName = [dt,'_','bandChannelScatters_',subject,'_band',num2str(iBand),'_ch',num2str(channels(iChannel)-chPerFigure+1),'_',analysis];
             disp(['Writing ',figureName]);
             savefig(h1,fullfile('figures',figureName),'compact');
 %             saveas(h1,fullfile('figures',[figureName,'.png']));

@@ -4,7 +4,7 @@ channels = [9;5;13];
 days = 7;
 rticks = [0 5];
 plotXcorr = false;
-startTrial = 5;
+startTrial = 1;
 
 phaseBand = 1;
 ampBand = 1;
@@ -44,6 +44,7 @@ for iCh = 1:size(channels,1)
             sigphase(ii,:) = angle(y) + pi;
         end
         
+        % !! try implementing PLV for amplitude?
         curData = allData{ampBand,channels(iCh),iDay};
         curZData = allZData{ampBand,channels(iCh),iDay};
         sigamp = [];
