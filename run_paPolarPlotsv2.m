@@ -1,7 +1,8 @@
-subject = 'jc';
+% subject = 'jc';
 channels = [5;9;13];
 days = 7;
 rticks = [0 2*pi];
+removeEdge = 25;
 
 if strcmp(subject,'mg')
     allZData = allZDataMG_event2;
@@ -14,7 +15,8 @@ else
 end
 
 colormapIm = imread('/Users/mattgaidica/Documents/MATLAB/Nepal/helpers/colorscale-GYR.png');
-cda = zeros(4,1000);
+colormapIm = colormapIm(:,removeEdge:end-removeEdge-1,:);
+cda = zeros(4,1000-removeEdge*2);
 % cda(1:3,:) = 255*othercolor('Set13',1000)';
 cda(1:3,:) = squeeze(colormapIm(1,:,:))';
 
@@ -52,12 +54,13 @@ for iDay = 1:7
     
     phaseSigMean = mean(plvAll);
 
-    p1 = polarplot(accelSig(accelMedIdx,:),phaseSigMean,'LineWidth',15);
+%     p1 = polarplot(accelSig(accelMedIdx,:),phaseSigMean,'LineWidth',15);
+    p1 = polarplot(accelSig(accelMedIdx,removeEdge:end-removeEdge-1),smooth(phaseSigMean(removeEdge:end-removeEdge-1),50),'LineWidth',15);
     drawnow;
     p1.Edge.ColorBinding = 'interpolated';
     p1.Edge.ColorData = uint8(cda);
     hold on;
-    polarplot(accelSigMed(500),phaseSigMean(500),'.','Color',[0/255 24/255 255/255],'MarkerSize',150);
+%     polarplot(accelSigMed(500),phaseSigMean(500),'.','Color',[0/255 24/255 255/255],'MarkerSize',150);
     set(gca,'RLim',rticks,'GridLineStyle','none','ThetaTick',[],'RTick',rticks,'RTickLabel',{'';''},'RAxisLocation',45,'ThetaZeroLocation','bottom');
     set(gca,'linewidth',1,'color',[.2 .2 .2]);
     set(gcf, 'Color', 'None');
