@@ -5,7 +5,7 @@ ascent = [1320 -230 -280 570 1210 -1820 -530];
 
 % --- ENV VARIABLES START ---
 analysis = 'phase';
-subject = 'mg';
+subject = 'jc';
 % --- ENV VARIABLES END ---
 
 if subject == 'mg'
@@ -26,8 +26,7 @@ fs = 500;
 winSamples = winSeconds * fs;
 t = linspace(-winSeconds,winSeconds,winSamples*2);
 
-% channels = 1:16;
-channels = [5:8];
+channels = 1:16;
 % fbandsNames = {'delta','theta','alpha','beta','gamma'};
 fbandsNames = {'delta'};
 days = 7;
@@ -37,13 +36,13 @@ chPerFigure = 4;
 chCount = 1;
 
 r2table = [];
-r2Count = 1;
 clear h1;
 dt = datestr(now,'yyyymmddHHMM');
 for iBand = 1:length(fbandsNames)
     ax = [];
     for iChannel = 1:length(channels)
         fitData = [];
+        r2Idx = channels(iChannel);
         for iDay = 1:days
             if chCount == 1 && iDay == 1
                 h1 = figure('position',[0 0 1100 900]);
@@ -73,9 +72,6 @@ for iBand = 1:length(fbandsNames)
                     plot(t,sigampCorr,'Linewidth',3,'color','r');
                     ylim([-7 7]);
                     fitData(iDay) = mean(abs(sigampCorr));
-                case 'peak2peak'
-                    % !!! needs work
-                    fitData(iDay) = peak2peak(zMean);
                 case 'phase'
                     sigphase = [];
                     for ii=1:size(curData,1)
@@ -88,11 +84,12 @@ for iBand = 1:length(fbandsNames)
 % %                     zAnalysis(iDay) = trapz(absPhase);
                     plvVector = plvMg(sigphase);
                     hold on; plot(t,plvVector,'color','r');
-                    fitData(iDay) = mean(plvVector(50:end-50));
-                    ylim([-pi pi]);
+                    fitData(iDay) = mean(plvVector(25:end-25)); % remove edges
+                    ylim([-2*pi 2*pi]);
                 otherwise
                     warning('invalid analysis');
             end
+            drawnow;
             
             if chCount == 1 && iDay == 1
                 title({[subject,' ',num2str(iBand),': ',fbandsNames{iBand}],['Day',num2str(iDay),', Ch',num2str(channels(iChannel))]},'FontSize',fontSize);
@@ -101,12 +98,12 @@ for iBand = 1:length(fbandsNames)
             end
             grid on;
             if iDay == 1
-                ylabel('Z');
+                ylabel('Z'); % or phase
             end
         end
         
-        r2table(r2Count,1) = iBand;
-        r2table(r2Count,2) = iChannel;
+        r2table(r2Idx,1) = iBand;
+        r2table(r2Idx,2) = channels(iChannel);
         
         subplot(rows,cols,specifySubplot([rows cols],[chCount,iDay])+1);
         scatter(fitData,altitude,25,'k','*');
@@ -117,9 +114,9 @@ for iBand = 1:length(fbandsNames)
         lm = fitlm(fitData',altitude','linear');
         pVal = lm.Coefficients{2,4};
         title({['Alt vs ',analysis],['r2: ',num2str(rsq),' p: ',num2str(pVal)],['rmse: ',num2str(rmse)]},'FontSize',fontSize);
-        r2table(r2Count,3) = rsq;
-        r2table(r2Count,4) = pVal;
-        r2table(r2Count,5:5+days-1) = fitData;
+        r2table(r2Idx,3) = rsq;
+        r2table(r2Idx,4) = pVal;
+        r2table(r2Idx,5:5+days-1) = fitData;
         
 % %         subplot(rows,cols,iSubplot+2);
 % %         scatter(zAnalysis,ascent,25,'k','*');
@@ -173,7 +170,6 @@ for iBand = 1:length(fbandsNames)
         else
             chCount = chCount + 1;
         end
-        r2Count = r2Count + 1;
     end
 end
 

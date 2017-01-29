@@ -1,8 +1,8 @@
-subject = 'mg';
+subject = 'jc';
 % channels = [13];
-channels = [9;5;13];
+channels = [5];
 days = 7;
-rticks = [0 5];
+rticks = [0 2*pi];
 plotXcorr = false;
 startTrial = 1;
 
@@ -39,32 +39,31 @@ for iCh = 1:size(channels,1)
         curZData = allZData{phaseBand,channels(iCh),iDay};
         sigphase = [];
         for ii=startTrial:size(curData,1)
-%             y = hilbert(curData(ii,:));
             y = hilbert(curAccelData(ii,:));
             sigphase(ii,:) = angle(y) + pi;
         end
+        sigphaseMean = mean(sigphase);
         
-        % !! try implementing PLV for amplitude?
         curData = allData{ampBand,channels(iCh),iDay};
         curZData = allZData{ampBand,channels(iCh),iDay};
         sigamp = [];
-        for ii=startTrial:size(curZData,1)
-            y = hilbert(curZData(ii,:));
-            sigamp(ii,:) = abs(y);% - mean(absy(1:100));
+        for ii=startTrial:size(curData,1)
+            y = hilbert(curData(ii,:));
+            sigamp(ii,:) = angle(y);
         end
-
+        
         for iSig = 1:size(sigamp,1)
-            polarplot(sigphase(iSig,:),sigamp(iSig,:),'Color',[0 0 0 .05]);
+            polarplot(sigphase(iSig,:),plvMg(sigamp,iSig),'Color',[0 0 0 .05]);
             hold on;
         end
-        sigphaseMedian = median(sigphase);
-        sigampMedian = median(sigamp);
-        p1 = polarplot(sigphaseMedian,sigampMedian,'LineWidth',5);
+        sigampMean = plvMg(sigamp);%mean(sigamp);
+        
+        p1 = polarplot(sigphaseMean,sigampMean,'LineWidth',3);
         drawnow;
         p1.Edge.ColorBinding = 'interpolated';
         p1.Edge.ColorData = uint8(cda);
-
-        polarplot(sigphaseMedian(500),sigampMedian(500),'.','Color','g','MarkerSize',40);
+        hold on;
+        polarplot(sigphaseMean(500),sigampMean(500),'.','Color','g','MarkerSize',30);
         set(gca,'RLim',rticks,'GridLineStyle','none','ThetaTick',[0 90 180 270],'RTick',...
             rticks,'RTickLabel',{'0';['Z = ',num2str(rticks(2))]},'RColor',[.25 .25 .25],'RAxisLocation',45,'ThetaZeroLocation','bottom');
         title(['Ch',num2str(channels(iCh)),' Day',num2str(iDay),' ',subject]);
