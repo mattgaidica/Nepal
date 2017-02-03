@@ -1,7 +1,7 @@
-% subject = 'jc';
+subject = 'jc';
 channels = [5;9;13];
 days = 7;
-rticks = [0 2*pi];
+rticks = [0 pi+1];
 removeEdge = 25;
 
 if strcmp(subject,'mg')

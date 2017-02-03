@@ -1,4 +1,4 @@
-subject = 'mg';
+subject = 'jc';
 analysis = 'accel';
 channels = [5];
 % channels = [9;5;13];
@@ -66,7 +66,7 @@ for iCh = 1:size(channels,1)
                     hold on;
                 end
                 ylim([-500 500]);
-                trialRange = linspace(-400,400,length(curTrialData));
+                trialRange = linspace(-500,500,length(curTrialData));
         end
         if plotMarkers
 %                 plot([0 0],[0 2*pi],'r--'); % ball
@@ -81,7 +81,7 @@ for iCh = 1:size(channels,1)
         xlim([-1 1]);
         xlabel('Time (s)');
         set(gca,'fontsize',fontSize);
-        figureTitle = ['Ch',num2str(channels(iCh)),'-Day',num2str(iDay),'-',analysis,'-',subject];
+        figureTitle = ['accel-Ch',num2str(channels(iCh)),'-Day',num2str(iDay),'-',analysis,'-',subject];
         title(figureTitle);
         
         drawnow;
