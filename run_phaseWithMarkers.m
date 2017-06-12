@@ -1,5 +1,5 @@
-subject = 'jc';
-analysis = 'accel';
+subject = 'mg';
+analysis = 'amp';
 channels = [5];
 % channels = [9;5;13];
 days = 7;
@@ -7,7 +7,7 @@ startTrial = 2;
 fs = 500;
 t = linspace(-1,1,1000);
 fontSize = 26;
-plotMarkers = true;
+plotMarkers = false;
 
 phaseBand = 1;
 
@@ -44,6 +44,8 @@ for iCh = 1:size(channels,1)
                 end
                 ylim([0 2*pi]);
                 yticks([0 pi 2*pi]);
+                set(gca,'TickDir','in');
+                box on;
                 trialRange = linspace(0,2*pi,length(curTrialData));
             case 'amp'
                 sigamp = [];
@@ -55,7 +57,10 @@ for iCh = 1:size(channels,1)
                 end
                 ylim([0 10]);
                 yticks([0 5 10]);
+                set(gca,'TickDir','in');
+                box on;
                 ylabel('Z-score');
+                xlim([-.9 .9]);
                 trialRange = linspace(0,10,length(curTrialData));
             case 'accel'
                 sigaccel = [];
@@ -66,6 +71,8 @@ for iCh = 1:size(channels,1)
                     hold on;
                 end
                 ylim([-500 500]);
+                set(gca,'TickDir','in');
+                box on;
                 trialRange = linspace(-500,500,length(curTrialData));
         end
         if plotMarkers
@@ -81,12 +88,12 @@ for iCh = 1:size(channels,1)
         xlim([-1 1]);
         xlabel('Time (s)');
         set(gca,'fontsize',fontSize);
-        figureTitle = ['accel-Ch',num2str(channels(iCh)),'-Day',num2str(iDay),'-',analysis,'-',subject];
+        figureTitle = ['singleDay-Ch',num2str(channels(iCh)),'-Day',num2str(iDay),'-',analysis,'-',subject];
         title(figureTitle);
         
         drawnow;
         set(gca,'position',[0 0 1 1],'units','normalized');
-        saveas(h1,fullfile('figures',[figureTitle,'.eps']),'epsc');
+        saveas(h1,fullfile('figures',[figureTitle,'-HAMB.eps']),'epsc');
         close(h1);
     end
 end
